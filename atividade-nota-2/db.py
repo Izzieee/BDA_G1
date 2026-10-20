@@ -1,10 +1,3 @@
-"""
-Etapa 1 — Conexão com o SQL Server (banco PetVida).
-
-A configuração vem das variáveis de ambiente PETVIDA_SERVER e
-PETVIDA_DATABASE, para que nenhuma credencial ou endereço fique fixo no código.
-"""
-
 import os
 from contextlib import contextmanager
 
@@ -12,7 +5,7 @@ import pyodbc
 
 
 class ConexaoError(Exception):
-    """Falha ao conectar ou operar no banco de dados."""
+    pass
 
 
 def _env(nome):
@@ -47,16 +40,17 @@ def conectar():
 
 
 def testar_conexao():
-    """Retorna servidor, banco e versão do SQL Server."""
     with conectar() as conn:
         cursor = conn.cursor()
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     @@SERVERNAME AS servidor,
                     DB_NAME() AS banco,
                     @@VERSION AS versao
-            """)
+                """
+            )
             linha = cursor.fetchone()
             return linha.servidor, linha.banco, linha.versao
         finally:
@@ -65,7 +59,6 @@ def testar_conexao():
 
 @contextmanager
 def transacao():
-    """Abre uma transação; confirma no sucesso e desfaz em caso de erro."""
     conn = conectar()
     cur = None
     try:

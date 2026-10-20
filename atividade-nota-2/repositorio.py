@@ -1,20 +1,7 @@
-"""
-Etapas 2 a 4 — CRUD de tutor, relacionamento 1:N tutor -> pet
-e relacionamento N:M consulta <-> procedimento.
-
-Toda consulta usa parâmetros "?" (pyodbc) — nunca valores colados no SQL.
-Cada função abre sua própria conexão pelo contexto transacao() de db.py,
-que confirma no sucesso, desfaz em erro e sempre fecha cursor/conexão.
-"""
-
 import pyodbc
 
 from db import transacao
 
-
-# --------------------------------------------------------------------------
-# Exceções de negócio
-# --------------------------------------------------------------------------
 
 class TutorNaoEncontradoError(Exception):
     pass
@@ -31,10 +18,6 @@ class ConsultaNaoEncontradaError(Exception):
 class RegraDeNegocioError(Exception):
     pass
 
-
-# --------------------------------------------------------------------------
-# Etapa 2 — CRUD de tutor
-# --------------------------------------------------------------------------
 
 def criar_tutor(nome, cpf, email=None, telefone=None):
     try:
@@ -93,7 +76,7 @@ def listar_tutores(filtro_nome=None):
 
 
 def atualizar_tutor(id_tutor, **campos):
-    campos_permitidos = {"nome", "email", "telefone"}  # lista branca de colunas
+    campos_permitidos = {"nome", "email", "telefone"}
 
     if not campos:
         raise ValueError("Informe pelo menos um campo para atualizar.")
@@ -102,7 +85,6 @@ def atualizar_tutor(id_tutor, **campos):
         raise ValueError("Só é permitido atualizar nome, email e telefone.")
 
     with transacao() as cur:
-        # Nomes de colunas não aceitam "?": só entram na SQL os nomes da lista branca.
         definicoes = ", ".join(f"{campo} = ?" for campo in campos)
         valores = list(campos.values()) + [id_tutor]
 
@@ -139,10 +121,6 @@ def excluir_tutor(id_tutor):
             "O banco de dados bloqueou a exclusão do tutor."
         ) from erro
 
-
-# --------------------------------------------------------------------------
-# Etapa 3 — Relacionamento 1:N tutor -> pet
-# --------------------------------------------------------------------------
 
 def criar_pet(id_tutor, nome, especie, raca=None, data_nascimento=None, peso_kg=None):
     try:
@@ -210,7 +188,6 @@ def excluir_pet(id_pet):
 
 
 def listar_pets_do_tutor(id_tutor):
-    """Navega do lado 1 (tutor) para o lado N (pets)."""
     with transacao() as cur:
         cur.execute(
             """
@@ -225,7 +202,6 @@ def listar_pets_do_tutor(id_tutor):
 
 
 def buscar_pet_com_tutor(id_pet):
-    """Navega do lado N (pet) para o lado 1 (tutor) com JOIN."""
     with transacao() as cur:
         cur.execute(
             """
@@ -241,13 +217,7 @@ def buscar_pet_com_tutor(id_pet):
         return cur.fetchone()
 
 
-# --------------------------------------------------------------------------
-# Etapa 4 — Relacionamento N:M consulta <-> procedimento
-# --------------------------------------------------------------------------
-
 def agendar_consulta(id_pet, id_vet, data_hora, motivo, procedimentos):
-    """Grava a consulta e os itens da tabela associativa numa única transação.
-    procedimentos = lista de tuplas (id_procedimento, quantidade)."""
     try:
         with transacao() as cur:
             cur.execute(
@@ -361,7 +331,6 @@ def remover_procedimento(id_consulta, id_procedimento):
 
 
 def listar_procedimentos_da_consulta(id_consulta):
-    """N:M — consulta -> procedimentos."""
     with transacao() as cur:
         cur.execute(
             """
@@ -377,7 +346,6 @@ def listar_procedimentos_da_consulta(id_consulta):
 
 
 def listar_consultas_por_procedimento(id_procedimento):
-    """N:M — procedimento -> consultas."""
     with transacao() as cur:
         cur.execute(
             """
@@ -431,7 +399,6 @@ def atualizar_status_consulta(id_consulta, novo_status):
 
 
 def excluir_consulta(id_consulta):
-    """Os itens da tabela associativa somem pelo ON DELETE CASCADE."""
     with transacao() as cur:
         cur.execute("DELETE FROM dbo.consulta WHERE id_consulta = ?", id_consulta)
 
@@ -442,10 +409,6 @@ def excluir_consulta(id_consulta):
 
         return True
 
-
-# --------------------------------------------------------------------------
-# Bônus — histórico do pet pela view vw_resumo_consulta
-# --------------------------------------------------------------------------
 
 def historico_do_pet(id_pet):
     with transacao() as cur:
