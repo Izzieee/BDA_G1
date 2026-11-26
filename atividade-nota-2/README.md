@@ -6,11 +6,14 @@ Implementação do Desafio Técnico "Conexão Python + SQL Server com pyodbc" us
 
 ```text
 atividade-nota-2/
-├── db.py             # Etapa 1: conexão, transação e teste de conexão
-├── repositorio.py    # Etapas 2 a 4: CRUD e relacionamentos 1:N e N:M
-├── verificar.py      # verificador básico do projeto
+├── db.py                  # Etapa 1: conexão, transação e teste de conexão
+├── repositorio.py         # Etapas 2 a 4: CRUD e relacionamentos 1:N e N:M
+├── verificar.py           # verificador básico do projeto
+├── print_verificador.png  # print da execução do verificador (entrega)
 └── README.md
 ```
+
+O `print_verificador.png` mostra a saída do `verificar.py` executado com sucesso contra o banco PetVida.
 
 ## 1. Criar o banco
 
